@@ -27,7 +27,6 @@ export default function OnboardingPage() {
   const [name, setName] = useState('');
   const [major, setMajor] = useState('');
   const [interests, setInterests] = useState('');
-  const [transcript, setTranscript] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const filteredMajors = major
@@ -39,18 +38,16 @@ export default function OnboardingPage() {
   const handleSubmit = () => {
     if (!canSubmit) return;
 
-    const parsedCourses = parseTranscript(transcript);
-
     createProfile({
       name: name.trim(),
       major: major.trim(),
       interests: interests.trim(),
       catalogYear: '2024-2025',
-      completedCourses: parsedCourses,
+      completedCourses: [],
       selectedMinors: [],
       planSemester: 'Summer 2026',
     });
-    void navigate('/');
+    void navigate('/courses');
   };
 
   return (
@@ -64,10 +61,10 @@ export default function OnboardingPage() {
           <h1 className="text-3xl font-bold text-white">
             Course<span className="text-ua-oasis">Compass</span>
           </h1>
-          <p className="mt-2 text-sm text-gray-400">Set up your profile to start planning smarter</p>
+          <p className="mt-2 text-sm text-gray-400">Set up your profile, then add your courses</p>
         </div>
 
-        {/* Single Form */}
+        {/* Form */}
         <div className="space-y-6 rounded-2xl border border-ua-blue-lighter bg-ua-blue-light p-6 sm:p-8">
 
           {/* Name */}
@@ -138,85 +135,16 @@ export default function OnboardingPage() {
             />
           </div>
 
-          {/* Transcript Upload */}
-          <div>
-            <label className="mb-2 block text-sm font-medium text-ua-cool-gray">
-              Import Completed Courses
-            </label>
-            <p className="mb-2 text-xs text-gray-500">
-              Paste your transcript or course list from UAccess / DegreeWorks. We'll extract the course codes automatically. You can also skip this and add courses later.
-            </p>
-            <textarea
-              value={transcript}
-              onChange={(e) => setTranscript(e.target.value)}
-              placeholder={"Paste your transcript here, e.g.:\n\nENGL 101  First-Year Composition  3.00  A\nMATH 112  College Algebra  3.00  B+\nISTA 130  Computational Thinking  4.00  B+\nSPAN 101  Elementary Spanish I  4.00  A-"}
-              className="h-36 w-full resize-none rounded-lg border border-ua-blue-lighter bg-ua-blue px-4 py-3 font-mono text-sm text-white placeholder:text-gray-500 focus:border-ua-oasis focus:outline-none"
-            />
-            {transcript.trim() && (
-              <div className="mt-2 rounded-lg bg-ua-blue/80 p-3">
-                <p className="text-xs font-medium text-ua-oasis">
-                  Found {parseTranscript(transcript).length} course(s)
-                </p>
-                <div className="mt-1 flex flex-wrap gap-1">
-                  {parseTranscript(transcript).map((c) => (
-                    <span key={c.code} className="rounded bg-ua-oasis/15 px-2 py-0.5 font-mono text-xs text-ua-oasis">
-                      {c.code}{c.grade ? ` (${c.grade})` : ''}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Submit */}
           <button
             onClick={handleSubmit}
             disabled={!canSubmit}
             className="w-full rounded-lg bg-ua-red px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-ua-red-dim disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Get Started
+            Next: Add Your Courses
           </button>
-
-          <p className="text-center text-xs text-gray-500">
-            You can update everything later from your profile.
-          </p>
         </div>
       </div>
     </div>
   );
-}
-
-/** Parse pasted transcript text into completed courses */
-function parseTranscript(text: string): { code: string; name: string; units: number; grade?: string }[] {
-  if (!text.trim()) return [];
-
-  const courses: { code: string; name: string; units: number; grade?: string }[] = [];
-  const seen = new Set<string>();
-
-  const codePattern = /\b([A-Z]{2,5})\s+(\d{3}[A-Z]?\d?)\b/g;
-  const gradePattern = /\b([ABCDF][+-]?)\b/;
-  const unitsPattern = /(\d+\.?\d*)\s*(units?|credits?|cr|\.00)/i;
-
-  const lines = text.split('\n');
-  for (const line of lines) {
-    const matches = [...line.matchAll(codePattern)];
-    for (const match of matches) {
-      const code = `${match[1]} ${match[2]}`;
-      if (seen.has(code)) continue;
-      seen.add(code);
-
-      const afterCode = line.slice((match.index ?? 0) + match[0].length);
-      const gradeMatch = afterCode.match(gradePattern);
-      const unitsMatch = afterCode.match(unitsPattern);
-
-      courses.push({
-        code,
-        name: '',
-        units: unitsMatch ? parseFloat(unitsMatch[1]) : 3,
-        grade: gradeMatch ? gradeMatch[1] : undefined,
-      });
-    }
-  }
-
-  return courses;
 }

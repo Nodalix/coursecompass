@@ -2,14 +2,15 @@ import { useProfile } from '../context/ProfileContext';
 import { calculateGenEdProgress } from '../logic/genEdProgress';
 import { GEN_ED_DOMAINS } from '../types';
 import { isDomainSatisfied, getDomainUnitsCompleted } from '../logic/genEdProgress';
+import { ArtistIcon, HumanistIcon, NatSciIcon, SocSciIcon, ConnectionsIcon } from '../components/Icons';
 import ProgressRing from '../components/ProgressRing';
 import { Link } from 'react-router-dom';
 
-const DOMAIN_ICONS: Record<string, string> = {
-  A: '🎨',
-  H: '📚',
-  N: '🔬',
-  S: '🌍',
+const DOMAIN_ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
+  A: ArtistIcon,
+  H: HumanistIcon,
+  N: NatSciIcon,
+  S: SocSciIcon,
 };
 
 export default function DashboardPage() {
@@ -24,7 +25,7 @@ export default function DashboardPage() {
       {/* Welcome */}
       <div className="text-center">
         <h1 className="text-2xl font-bold text-white">
-          Hey, {currentProfile.name} 👋
+          Hey, {currentProfile.name}
         </h1>
         <p className="mt-1 text-sm text-gray-400">{currentProfile.major}</p>
         {currentProfile.interests && (
@@ -70,13 +71,14 @@ export default function DashboardPage() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-white">Exploring Perspectives</h2>
           <Link to="/gen-ed" className="text-xs text-ua-oasis hover:underline">
-            View All →
+            View All &rarr;
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {GEN_ED_DOMAINS.map((domain) => {
             const satisfied = isDomainSatisfied(currentProfile, domain.key);
             const units = getDomainUnitsCompleted(currentProfile, domain.key);
+            const Icon = DOMAIN_ICON_MAP[domain.key];
             return (
               <Link
                 key={domain.key}
@@ -87,7 +89,9 @@ export default function DashboardPage() {
                     : 'border-ua-blue-lighter bg-ua-blue-light hover:border-ua-blue-lighter/80'
                 }`}
               >
-                <div className="text-2xl">{DOMAIN_ICONS[domain.key]}</div>
+                <div className="flex justify-center">
+                  {Icon && <Icon className={`h-6 w-6 ${satisfied ? 'text-ua-oasis' : 'text-gray-400'}`} />}
+                </div>
                 <p className="mt-2 text-xs font-medium text-gray-300">{domain.label}</p>
                 <p className={`mt-1 text-sm font-bold ${satisfied ? 'text-ua-oasis' : 'text-gray-500'}`}>
                   {satisfied ? 'Done' : `${units}/${domain.minUnits}u`}
@@ -103,13 +107,15 @@ export default function DashboardPage() {
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-white">Building Connections</h2>
           <Link to="/gen-ed" className="text-xs text-ua-oasis hover:underline">
-            View All →
+            View All &rarr;
           </Link>
         </div>
         <div className="rounded-xl border border-ua-blue-lighter bg-ua-blue-light p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🔗</span>
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-ua-blue">
+                <ConnectionsIcon className="h-5 w-5 text-ua-oasis" />
+              </div>
               <div>
                 <p className="text-sm font-medium text-gray-200">Interdisciplinary Courses</p>
                 <p className="text-xs text-gray-500">3 courses required (9 units)</p>

@@ -2,18 +2,19 @@ import { useState } from 'react';
 import type { GenEdCourse, GenEdDomain } from '../types';
 import { useProfile } from '../context/ProfileContext';
 import { getCoursesForDomain, getDomainUnitsCompleted } from '../logic/genEdProgress';
+import { ArtistIcon, HumanistIcon, NatSciIcon, SocSciIcon, ConnectionsIcon } from './Icons';
 import CourseCard from './CourseCard';
 
 interface GenEdDomainCardProps {
   domain: GenEdDomain;
 }
 
-const DOMAIN_ICONS: Record<string, string> = {
-  A: '🎨',
-  H: '📚',
-  N: '🔬',
-  S: '🌍',
-  B: '🔗',
+const DOMAIN_ICON_MAP: Record<string, React.FC<{ className?: string }>> = {
+  A: ArtistIcon,
+  H: HumanistIcon,
+  N: NatSciIcon,
+  S: SocSciIcon,
+  B: ConnectionsIcon,
 };
 
 export default function GenEdDomainCard({ domain }: GenEdDomainCardProps) {
@@ -35,6 +36,8 @@ export default function GenEdDomainCard({ domain }: GenEdDomainCardProps) {
     }
   };
 
+  const Icon = DOMAIN_ICON_MAP[domain.key];
+
   return (
     <div className="rounded-xl border border-ua-blue-lighter bg-ua-blue-light/50 overflow-hidden">
       <button
@@ -42,7 +45,9 @@ export default function GenEdDomainCard({ domain }: GenEdDomainCardProps) {
         className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-ua-blue-light"
       >
         <div className="flex items-center gap-3">
-          <span className="text-2xl">{DOMAIN_ICONS[domain.key]}</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-ua-blue">
+            {Icon && <Icon className="h-5 w-5 text-ua-oasis" />}
+          </div>
           <div>
             <h3 className="font-semibold text-white">{domain.name}</h3>
             <p className="text-xs text-gray-400">

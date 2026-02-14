@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useProfile } from '../context/ProfileContext';
 import { calculateGenEdProgress } from '../logic/genEdProgress';
+import { GradCapIcon } from '../components/Icons';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -181,8 +182,8 @@ ${currentProfile.completedCourses.map((c) => `- ${c.code}${c.grade ? ` (${c.grad
       <div className="flex-1 overflow-y-auto space-y-4 pb-4">
         {messages.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-6 py-12">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-ua-oasis/15 text-3xl">
-              🎓
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-ua-oasis/15">
+              <GradCapIcon className="h-8 w-8 text-ua-oasis" />
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-400">

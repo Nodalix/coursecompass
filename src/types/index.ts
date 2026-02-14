@@ -6,6 +6,7 @@ export interface StudentProfile {
   interests: string;
   catalogYear: string;
   completedCourses: CompletedCourse[];
+  currentCourses?: CompletedCourse[];
   selectedMinors: string[];
   planSemester: string;
   createdAt: string;
