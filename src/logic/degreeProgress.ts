@@ -83,6 +83,72 @@ export function calculateMajorProgress(profile: StudentProfile, majorName: strin
   };
 }
 
+export interface MajorBreakdownGroup {
+  label: string;
+  courses: { code: string; name: string; units: number; done: boolean }[];
+}
+
+export interface MajorBreakdown {
+  name: string;
+  known: boolean;
+  groups: MajorBreakdownGroup[];
+}
+
+export function getMajorBreakdown(profile: StudentProfile, majorName: string): MajorBreakdown {
+  const completedCodes = new Set(profile.completedCourses.map((c) => c.code));
+  const normalizedMajor = majorName.toLowerCase();
+
+  if (normalizedMajor.includes('information science') || normalizedMajor.includes('bsis')) {
+    const groups: MajorBreakdownGroup[] = [
+      {
+        label: 'Core',
+        courses: BSIS_REQUIREMENTS.core.map((c) => ({
+          code: c.code,
+          name: c.name,
+          units: c.units,
+          done: completedCodes.has(c.code),
+        })),
+      },
+      {
+        label: 'Required',
+        courses: BSIS_REQUIREMENTS.additionalRequired.map((c) => ({
+          code: c.code,
+          name: c.name,
+          units: c.units,
+          done: completedCodes.has(c.code),
+        })),
+      },
+    ];
+
+    // Find best-matching emphasis
+    let bestEmphasis = { name: '', courses: [] as string[], units: 0 };
+    let bestCount = 0;
+    for (const emp of Object.values(BSIS_REQUIREMENTS.emphases)) {
+      const count = emp.courses.filter((c) => completedCodes.has(c)).length;
+      if (count > bestCount) {
+        bestCount = count;
+        bestEmphasis = { name: emp.name, courses: [...emp.courses], units: emp.units };
+      }
+    }
+
+    if (bestEmphasis.name) {
+      groups.push({
+        label: `Emphasis: ${bestEmphasis.name}`,
+        courses: bestEmphasis.courses.map((code) => ({
+          code,
+          name: '',
+          units: 3,
+          done: completedCodes.has(code),
+        })),
+      });
+    }
+
+    return { name: majorName, known: true, groups };
+  }
+
+  return { name: majorName, known: false, groups: [] };
+}
+
 export function calculateMinorProgress(profile: StudentProfile, minorName: string): MinorProgress {
   const normalizedMinor = minorName.toLowerCase();
 

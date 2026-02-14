@@ -1,6 +1,6 @@
 import { useProfile } from '../context/ProfileContext';
 import { calculateGenEdProgress } from '../logic/genEdProgress';
-import { calculateMajorProgress, calculateMinorProgress, getSuggestedMinors } from '../logic/degreeProgress';
+import { calculateMajorProgress, calculateMinorProgress, getSuggestedMinors, getMajorBreakdown } from '../logic/degreeProgress';
 import { GEN_ED_DOMAINS } from '../types';
 import { isDomainSatisfied, getDomainUnitsCompleted } from '../logic/genEdProgress';
 import { ArtistIcon, HumanistIcon, NatSciIcon, SocSciIcon, ConnectionsIcon, PlusIcon } from '../components/Icons';
@@ -146,6 +146,63 @@ export default function DashboardPage() {
           <span><span className="font-medium text-gray-300">{totalUnits + currentCourseUnits}</span>/120 units</span>
         </div>
       </div>
+
+      {/* Major Breakdown */}
+      {currentProfile.majors.map((majorName) => {
+        const breakdown = getMajorBreakdown(currentProfile, majorName);
+        if (!breakdown.known) return (
+          <div key={majorName} className="rounded-xl border border-ua-blue-lighter bg-ua-blue-light p-4">
+            <h2 className="font-semibold text-white">{majorName}</h2>
+            <p className="mt-1 text-xs text-gray-500">
+              Major requirements not yet mapped. <Link to="/chat" className="text-ua-oasis hover:underline">Ask the advisor</Link> for course recommendations.
+            </p>
+          </div>
+        );
+        return (
+          <div key={majorName}>
+            <h2 className="mb-3 font-semibold text-white">{majorName}</h2>
+            <div className="space-y-3">
+              {breakdown.groups.map((group) => {
+                const done = group.courses.filter((c) => c.done).length;
+                return (
+                  <div key={group.label} className="rounded-xl border border-ua-blue-lighter bg-ua-blue-light p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{group.label}</h3>
+                      <span className={`text-xs font-medium ${done === group.courses.length ? 'text-ua-oasis' : 'text-gray-500'}`}>
+                        {done}/{group.courses.length}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+                      {group.courses.map((c) => (
+                        <div
+                          key={c.code}
+                          className={`flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs ${
+                            c.done ? 'bg-ua-oasis/5' : 'bg-ua-blue/40'
+                          }`}
+                        >
+                          <div className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border ${
+                            c.done
+                              ? 'border-ua-oasis bg-ua-oasis text-white'
+                              : 'border-gray-600'
+                          }`}>
+                            {c.done && (
+                              <svg className="h-2.5 w-2.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2.5}>
+                                <path d="M2 6l3 3 5-5" />
+                              </svg>
+                            )}
+                          </div>
+                          <span className={`font-mono ${c.done ? 'text-ua-oasis' : 'text-gray-400'}`}>{c.code}</span>
+                          {c.name && <span className={`truncate ${c.done ? 'text-gray-300' : 'text-gray-500'}`}>{c.name}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
 
       {/* Below cluster: Gen Ed breakdown + Suggested Minors side-by-side */}
       <div className="flex gap-4">
