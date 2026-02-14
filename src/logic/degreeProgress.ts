@@ -1,7 +1,12 @@
-import type { StudentProfile } from '../types';
+import type { StudentProfile, GenEdCourse } from '../types';
+import { GEN_ED_DOMAINS } from '../types';
 import { BSIS_REQUIREMENTS } from '../data/bsisRequirements';
 import { MUSIC_MINOR } from '../data/minors/music';
 import { BUSINESS_MINOR } from '../data/minors/business';
+import genEdCourses from '../data/genEdCourses.json';
+import { isDomainSatisfied } from './genEdProgress';
+
+const genEd = genEdCourses as GenEdCourse[];
 
 export interface MajorProgress {
   name: string;
@@ -291,4 +296,130 @@ export function getSuggestedMinors(profile: StudentProfile): SuggestedMinor[] {
   // Sort by score, take top 3
   scored.sort((a, b) => b.score - a.score);
   return scored.slice(0, 3).map(({ score: _s, ...rest }) => rest);
+}
+
+// ── Recommended courses for next semester ──
+
+export interface RecommendedCourse {
+  code: string;
+  name: string;
+  units: number;
+  reason: string;
+}
+
+export function getRecommendedCourses(profile: StudentProfile, maxCourses = 5): RecommendedCourse[] {
+  const allDone = new Set([
+    ...profile.completedCourses.map((c) => c.code),
+    ...(profile.currentCourses ?? []).map((c) => c.code),
+  ]);
+  const recs: (RecommendedCourse & { priority: number })[] = [];
+
+  // 1. UNIV 301 if not done
+  if (!allDone.has('UNIV 301') && !profile.genEdChecks.univ301) {
+    recs.push({ code: 'UNIV 301', name: 'Gen Ed Capstone', units: 1, reason: 'Required — finish UNIV', priority: 10 });
+  }
+
+  // 2. Building Connections courses needed
+  const bcCourses = genEd.filter((c) => c.g.includes('B'));
+  const bcDone = bcCourses.filter((c) => allDone.has(c.c));
+  const bcNeeded = 3 - bcDone.length;
+  if (bcNeeded > 0) {
+    const bcAvailable = bcCourses
+      .filter((c) => !allDone.has(c.c))
+      .sort((a, b) => {
+        // Prefer courses that also count for interests
+        const interests = (profile.interests ?? '').toLowerCase();
+        const aMatch = interests.includes(a.d.toLowerCase()) ? 1 : 0;
+        const bMatch = interests.includes(b.d.toLowerCase()) ? 1 : 0;
+        return bMatch - aMatch;
+      });
+
+    for (let i = 0; i < Math.min(bcNeeded, 2); i++) {
+      if (bcAvailable[i]) {
+        recs.push({
+          code: bcAvailable[i].c,
+          name: bcAvailable[i].n,
+          units: bcAvailable[i].u,
+          reason: `Building Connections (${bcDone.length + i + 1}/3)`,
+          priority: 8,
+        });
+      }
+    }
+  }
+
+  // 3. Unsatisfied EP domains
+  for (const domain of GEN_ED_DOMAINS) {
+    if (!isDomainSatisfied(profile, domain.key)) {
+      const available = genEd
+        .filter((c) => c.g.includes(domain.key) && !allDone.has(c.c))
+        .slice(0, 1);
+      if (available[0]) {
+        recs.push({
+          code: available[0].c,
+          name: available[0].n,
+          units: available[0].u,
+          reason: `EP: ${domain.name}`,
+          priority: 7,
+        });
+      }
+    }
+  }
+
+  // 4. Next major courses (BSIS emphasis)
+  const normalizedMajor = profile.majors.map((m) => m.toLowerCase()).join(' ');
+  if (normalizedMajor.includes('information science') || normalizedMajor.includes('bsis')) {
+    // Find best emphasis
+    let bestEmphasis = { name: '', courses: [] as string[] };
+    let bestCount = 0;
+    for (const emp of Object.values(BSIS_REQUIREMENTS.emphases)) {
+      const count = emp.courses.filter((c) => allDone.has(c)).length;
+      if (count > bestCount) {
+        bestCount = count;
+        bestEmphasis = { name: emp.name, courses: [...emp.courses] };
+      }
+    }
+    if (!bestEmphasis.name) {
+      // Default to Data Science if none started
+      bestEmphasis = { name: BSIS_REQUIREMENTS.emphases.data_science.name, courses: [...BSIS_REQUIREMENTS.emphases.data_science.courses] };
+    }
+    const nextEmphasis = bestEmphasis.courses.filter((c) => !allDone.has(c)).slice(0, 2);
+    for (const code of nextEmphasis) {
+      recs.push({ code, name: '', units: 3, reason: `${bestEmphasis.name} emphasis`, priority: 6 });
+    }
+
+    // Required courses not done
+    for (const c of BSIS_REQUIREMENTS.additionalRequired) {
+      if (!allDone.has(c.code)) {
+        recs.push({ code: c.code, name: c.name, units: c.units, reason: 'Major required', priority: 5 });
+      }
+    }
+  }
+
+  // 5. Minor courses
+  for (const minorName of profile.selectedMinors) {
+    const minorData = MINOR_DB[minorName.toLowerCase()];
+    if (minorData) {
+      const next = minorData.courses.filter((c) => !allDone.has(c)).slice(0, 1);
+      if (next[0]) {
+        const course = genEd.find((c) => c.c === next[0]);
+        recs.push({
+          code: next[0],
+          name: course?.n ?? '',
+          units: course?.u ?? 3,
+          reason: `${minorName} minor`,
+          priority: 4,
+        });
+      }
+    }
+  }
+
+  // Dedupe and sort by priority
+  const seen = new Set<string>();
+  const unique = recs.filter((r) => {
+    if (seen.has(r.code)) return false;
+    seen.add(r.code);
+    return true;
+  });
+  unique.sort((a, b) => b.priority - a.priority);
+  return unique.slice(0, maxCourses).map(({ priority: _p, ...rest }) => rest);
 }

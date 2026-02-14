@@ -1,6 +1,6 @@
 import { useProfile } from '../context/ProfileContext';
 import { calculateGenEdProgress } from '../logic/genEdProgress';
-import { calculateMajorProgress, calculateMinorProgress, getSuggestedMinors, getMajorBreakdown } from '../logic/degreeProgress';
+import { calculateMajorProgress, calculateMinorProgress, getSuggestedMinors, getMajorBreakdown, getRecommendedCourses } from '../logic/degreeProgress';
 import { GEN_ED_DOMAINS } from '../types';
 import { isDomainSatisfied, getDomainUnitsCompleted } from '../logic/genEdProgress';
 import { ArtistIcon, HumanistIcon, NatSciIcon, SocSciIcon, ConnectionsIcon, PlusIcon } from '../components/Icons';
@@ -54,6 +54,7 @@ export default function DashboardPage() {
   const majorProgressList = currentProfile.majors.map((m) => calculateMajorProgress(currentProfile, m));
   const minorProgressList = currentProfile.selectedMinors.map((m) => calculateMinorProgress(currentProfile, m));
   const suggestedMinors = getSuggestedMinors(currentProfile);
+  const recommendedCourses = getRecommendedCourses(currentProfile);
 
   const totalUnits = currentProfile.completedCourses.reduce((sum, c) => sum + c.units, 0);
   const currentCourseUnits = (currentProfile.currentCourses ?? []).reduce((sum, c) => sum + c.units, 0);
@@ -146,6 +147,40 @@ export default function DashboardPage() {
           <span><span className="font-medium text-gray-300">{totalUnits + currentCourseUnits}</span>/120 units</span>
         </div>
       </div>
+
+      {/* Recommended for Next Semester */}
+      {recommendedCourses.length > 0 && (
+        <div>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="font-semibold text-white">Recommended for {currentProfile.planSemester}</h2>
+            <Link to="/chat" className="text-xs text-ua-oasis hover:underline">
+              Ask Advisor &rarr;
+            </Link>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {recommendedCourses.map((c) => (
+              <div
+                key={c.code}
+                className="flex items-center justify-between rounded-xl border border-ua-blue-lighter bg-ua-blue-light p-3"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-sm font-medium text-ua-oasis">{c.code}</span>
+                    <span className="text-xs text-gray-500">{c.units}u</span>
+                  </div>
+                  {c.name && <p className="mt-0.5 truncate text-xs text-gray-400">{c.name}</p>}
+                </div>
+                <span className="ml-2 shrink-0 rounded-full bg-ua-blue px-2.5 py-0.5 text-[10px] font-medium text-gray-400">
+                  {c.reason}
+                </span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-2 text-center text-[10px] text-gray-600">
+            Based on your remaining requirements. Verify availability on UAccess.
+          </p>
+        </div>
+      )}
 
       {/* Major Breakdown */}
       {currentProfile.majors.map((majorName) => {

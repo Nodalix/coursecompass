@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useCallback, useEffect, type React
 import type { StudentProfile, CompletedCourse, GenEdChecks } from '../types';
 import { emptyGenEdChecks } from '../types';
 import * as storage from '../logic/storage';
+import { SEED_PROFILE } from '../data/seedProfile';
 
 interface ProfileContextValue {
   profiles: StudentProfile[];
@@ -129,12 +130,32 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     [currentProfile, updateProfile]
   );
 
-  // Sync currentId on first load
+  // Seed demo profile on first load if no profiles exist
   useEffect(() => {
+    if (profileIds.length === 0) {
+      const id = 'alex-demo';
+      const seeded: StudentProfile = {
+        ...SEED_PROFILE,
+        id,
+        createdAt: '2024-08-19',
+        genEdChecks: {
+          engl101: true,
+          engl102: true,
+          math: true,
+          lang1: true,
+          lang2: true,
+          univ101: true,
+          univ301: false,
+        },
+      };
+      persistProfiles([seeded], [id]);
+      switchProfile(id);
+      return;
+    }
     if (!currentId && profileIds.length > 0) {
       switchProfile(profileIds[0]);
     }
-  }, [currentId, profileIds, switchProfile]);
+  }, [currentId, profileIds, switchProfile, persistProfiles]);
 
   return (
     <ProfileContext.Provider
