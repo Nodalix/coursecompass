@@ -37,7 +37,8 @@ export default function ChatPage() {
 
 ## Current Student Profile
 - Name: ${currentProfile.name}
-- Major: ${currentProfile.major}
+- Major(s): ${currentProfile.majors.join(', ')}
+- Minor(s): ${currentProfile.selectedMinors.length > 0 ? currentProfile.selectedMinors.join(', ') : 'None'}
 - Interests: ${currentProfile.interests || 'Not specified'}
 - Planning Semester: ${currentProfile.planSemester}
 - Catalog Year: ${currentProfile.catalogYear}

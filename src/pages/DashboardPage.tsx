@@ -27,7 +27,12 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-white">
           Hey, {currentProfile.name}
         </h1>
-        <p className="mt-1 text-sm text-gray-400">{currentProfile.major}</p>
+        <p className="mt-1 text-sm text-gray-400">{currentProfile.majors.join(' + ')}</p>
+        {currentProfile.selectedMinors.length > 0 && (
+          <p className="mt-0.5 text-xs text-gray-500">
+            Minor{currentProfile.selectedMinors.length > 1 ? 's' : ''}: {currentProfile.selectedMinors.join(', ')}
+          </p>
+        )}
         {currentProfile.interests && (
           <p className="mx-auto mt-2 max-w-md text-xs text-gray-500 italic">
             "{currentProfile.interests.slice(0, 100)}{currentProfile.interests.length > 100 ? '...' : ''}"

@@ -27,7 +27,17 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [profiles, setProfiles] = useState<StudentProfile[]>(() => {
     const ids = storage.getItem<string[]>('profiles-list') ?? [];
     return ids
-      .map((id) => storage.getItem<StudentProfile>(`profile-${id}`))
+      .map((id) => {
+        const p = storage.getItem<StudentProfile & { major?: string }>(`profile-${id}`);
+        if (!p) return null;
+        // Migrate old single-major profiles to majors array
+        if (!p.majors && p.major) {
+          p.majors = [p.major];
+          delete p.major;
+          storage.setItem(`profile-${id}`, p);
+        }
+        return p as StudentProfile;
+      })
       .filter((p): p is StudentProfile => p !== null);
   });
 

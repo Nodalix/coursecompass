@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useProfile } from '../context/ProfileContext';
-import { UploadIcon, PlusIcon, XIcon } from '../components/Icons';
+import { UploadIcon, PlusIcon, XIcon, CameraIcon } from '../components/Icons';
 import allUndergrad from '../data/allUndergrad.json';
 
 interface UndergradCourse {
@@ -12,7 +12,7 @@ interface UndergradCourse {
 
 const catalog = allUndergrad as UndergradCourse[];
 
-type InputTab = 'paste' | 'search';
+type InputTab = 'paste' | 'search' | 'screenshot';
 
 export default function CoursesPage() {
   const { currentProfile, addCompletedCourse, removeCompletedCourse, updateProfile } = useProfile();
@@ -21,6 +21,14 @@ export default function CoursesPage() {
   const [search, setSearch] = useState('');
   const [showCurrentInput, setShowCurrentInput] = useState(false);
   const [currentSearch, setCurrentSearch] = useState('');
+
+  // Screenshot state
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [parsing, setParsing] = useState(false);
+  const [parseResult, setParseResult] = useState<{ code: string; name: string; units: number; grade?: string }[]>([]);
+  const [parseError, setParseError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!currentProfile) return null;
 
@@ -54,6 +62,17 @@ export default function CoursesPage() {
     setTranscript('');
   };
 
+  const handleImportScreenshot = () => {
+    for (const c of parseResult) {
+      if (!completed.some((ex) => ex.code === c.code)) {
+        addCompletedCourse(c);
+      }
+    }
+    setParseResult([]);
+    setImagePreview(null);
+    setImageFile(null);
+  };
+
   const handleAddCurrent = (course: UndergradCourse) => {
     const already = currentCourses.some((c) => c.code === course.c);
     if (already) return;
@@ -67,6 +86,89 @@ export default function CoursesPage() {
     updateProfile(currentProfile.id, {
       currentCourses: currentCourses.filter((c) => c.code !== code),
     });
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setParseResult([]);
+    setParseError('');
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setImagePreview(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleParseScreenshot = async () => {
+    if (!imageFile) return;
+
+    const apiKey = localStorage.getItem('cc-api-key');
+    if (!apiKey) {
+      setParseError('API key required. Go to the Advisor tab and add your Anthropic API key first.');
+      return;
+    }
+
+    setParsing(true);
+    setParseError('');
+
+    try {
+      const base64 = await fileToBase64(imageFile);
+      const mediaType = imageFile.type as 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp';
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2048,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                {
+                  type: 'image',
+                  source: { type: 'base64', media_type: mediaType, data: base64 },
+                },
+                {
+                  type: 'text',
+                  text: `Extract all university courses from this transcript/schedule image. Return ONLY a JSON array with objects like: [{"code":"ENGL 101","name":"First-Year Composition","units":3,"grade":"A"}]. Use the exact course code format "DEPT NUM" (e.g. "ENGL 101", "MATH 112"). If no grade is visible, omit the grade field. If units aren't visible, default to 3. Return ONLY the JSON array, no other text.`,
+                },
+              ],
+            },
+          ],
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err);
+      }
+
+      const data = await response.json();
+      const text = data.content?.[0]?.text ?? '';
+
+      // Extract JSON from response
+      const jsonMatch = text.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        throw new Error('Could not find course data in the response. Try a clearer image.');
+      }
+
+      const courses = JSON.parse(jsonMatch[0]) as { code: string; name: string; units: number; grade?: string }[];
+      setParseResult(courses);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Failed to parse image';
+      setParseError(msg);
+    } finally {
+      setParsing(false);
+    }
   };
 
   return (
@@ -95,7 +197,16 @@ export default function CoursesPage() {
             }`}
           >
             <UploadIcon className="h-4 w-4" />
-            Paste Transcript
+            Paste
+          </button>
+          <button
+            onClick={() => setTab('screenshot')}
+            className={`flex flex-1 items-center justify-center gap-2 py-3 text-sm font-medium transition-colors ${
+              tab === 'screenshot' ? 'border-b-2 border-ua-oasis text-ua-oasis' : 'text-gray-400 hover:text-gray-200'
+            }`}
+          >
+            <CameraIcon className="h-4 w-4" />
+            Screenshot
           </button>
           <button
             onClick={() => setTab('search')}
@@ -104,7 +215,7 @@ export default function CoursesPage() {
             }`}
           >
             <PlusIcon className="h-4 w-4" />
-            Search & Add
+            Search
           </button>
         </div>
 
@@ -143,6 +254,113 @@ export default function CoursesPage() {
                       <span key={c.code} className="rounded-lg bg-ua-oasis/10 px-2.5 py-1 font-mono text-xs text-ua-oasis">
                         {c.code}{c.grade ? ` (${c.grade})` : ''}
                       </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {tab === 'screenshot' && (
+            <div className="space-y-4">
+              <div className="rounded-lg bg-ua-blue/50 p-3">
+                <p className="text-xs font-medium text-ua-oasis">Upload a screenshot of your transcript or schedule</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Take a screenshot from UAccess, DegreeWorks, or any class schedule and we'll extract your courses using AI.
+                </p>
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+
+              {!imagePreview ? (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex w-full flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed border-ua-blue-lighter py-10 text-gray-400 transition-colors hover:border-ua-oasis/40 hover:text-gray-300"
+                >
+                  <CameraIcon className="h-10 w-10" />
+                  <div className="text-center">
+                    <p className="text-sm font-medium">Click to upload a screenshot</p>
+                    <p className="mt-1 text-xs text-gray-500">PNG, JPG, or WEBP</p>
+                  </div>
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <div className="relative">
+                    <img
+                      src={imagePreview}
+                      alt="Transcript screenshot"
+                      className="max-h-64 w-full rounded-lg border border-ua-blue-lighter object-contain"
+                    />
+                    <button
+                      onClick={() => {
+                        setImagePreview(null);
+                        setImageFile(null);
+                        setParseResult([]);
+                        setParseError('');
+                      }}
+                      className="absolute right-2 top-2 rounded-full bg-ua-blue/80 p-1.5 text-gray-300 transition-colors hover:text-white"
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  {parseResult.length === 0 && !parsing && (
+                    <button
+                      onClick={() => void handleParseScreenshot()}
+                      className="w-full rounded-lg bg-ua-red px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-ua-red-dim"
+                    >
+                      Extract Courses from Image
+                    </button>
+                  )}
+
+                  {parsing && (
+                    <div className="flex items-center justify-center gap-2 py-4">
+                      <div className="flex gap-1">
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-ua-oasis [animation-delay:0ms]" />
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-ua-oasis [animation-delay:150ms]" />
+                        <div className="h-2 w-2 animate-bounce rounded-full bg-ua-oasis [animation-delay:300ms]" />
+                      </div>
+                      <p className="text-sm text-gray-400">Reading your transcript...</p>
+                    </div>
+                  )}
+
+                  {parseError && (
+                    <div className="rounded-lg border border-ua-red/30 bg-ua-red/10 p-3">
+                      <p className="text-xs text-ua-bloom">{parseError}</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {parseResult.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-ua-oasis">
+                      Found {parseResult.length} course{parseResult.length !== 1 ? 's' : ''}
+                    </p>
+                    <button
+                      onClick={handleImportScreenshot}
+                      className="rounded-lg bg-ua-red px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-ua-red-dim"
+                    >
+                      Import All
+                    </button>
+                  </div>
+                  <div className="space-y-1.5">
+                    {parseResult.map((c) => (
+                      <div key={c.code} className="flex items-center justify-between rounded-lg bg-ua-blue/50 p-2.5">
+                        <div>
+                          <span className="font-mono text-xs font-medium text-ua-oasis">{c.code}</span>
+                          {c.name && <span className="ml-2 text-xs text-gray-300">{c.name}</span>}
+                          <span className="ml-2 text-xs text-gray-500">{c.units}u</span>
+                          {c.grade && <span className="ml-2 rounded bg-ua-oasis/10 px-1.5 py-0.5 text-xs text-ua-oasis">{c.grade}</span>}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -279,7 +497,7 @@ export default function CoursesPage() {
             <div className="py-8 text-center">
               <UploadIcon className="mx-auto h-8 w-8 text-gray-600" />
               <p className="mt-3 text-sm text-gray-400">No courses yet</p>
-              <p className="mt-1 text-xs text-gray-500">Paste your transcript above or search to add courses one by one</p>
+              <p className="mt-1 text-xs text-gray-500">Paste your transcript, upload a screenshot, or search to add courses</p>
             </div>
           ) : (
             <div className="space-y-1.5">
@@ -335,4 +553,18 @@ function parseTranscript(text: string): { code: string; name: string; units: num
     }
   }
   return courses;
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Remove the data:image/...;base64, prefix
+      const base64 = result.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }

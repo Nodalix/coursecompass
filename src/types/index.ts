@@ -1,7 +1,7 @@
 export interface StudentProfile {
   id: string;
   name: string;
-  major: string;
+  majors: string[];
   emphasis?: string;
   interests: string;
   catalogYear: string;

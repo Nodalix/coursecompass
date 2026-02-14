@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProfile } from '../context/ProfileContext';
+import { PlusIcon, XIcon } from '../components/Icons';
 
 const COMMON_MAJORS = [
   'BS Information Science',
@@ -20,34 +21,92 @@ const COMMON_MAJORS = [
   'BA Media Arts',
 ];
 
+const COMMON_MINORS = [
+  'Business Administration',
+  'Computer Science',
+  'Data Science',
+  'Music',
+  'Psychology',
+  'Spanish',
+  'Mathematics',
+  'Sociology',
+  'English',
+  'Communication',
+  'Economics',
+  'Art History',
+  'Philosophy',
+  'Statistics',
+  'Public Health',
+];
+
 export default function OnboardingPage() {
   const navigate = useNavigate();
   const { createProfile } = useProfile();
 
   const [name, setName] = useState('');
-  const [major, setMajor] = useState('');
+  const [majors, setMajors] = useState<string[]>(['']);
+  const [minors, setMinors] = useState<string[]>([]);
+  const [minorInput, setMinorInput] = useState('');
   const [interests, setInterests] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState<number | null>(null);
+  const [showMinorSuggestions, setShowMinorSuggestions] = useState(false);
 
-  const filteredMajors = major
-    ? COMMON_MAJORS.filter((m) => m.toLowerCase().includes(major.toLowerCase()))
-    : COMMON_MAJORS;
+  const canSubmit = name.trim().length > 0 && majors[0].trim().length > 0;
 
-  const canSubmit = name.trim().length > 0 && major.trim().length > 0;
+  const filteredMajors = (query: string) =>
+    query
+      ? COMMON_MAJORS.filter((m) => m.toLowerCase().includes(query.toLowerCase()))
+      : COMMON_MAJORS;
+
+  const filteredMinors = minorInput
+    ? COMMON_MINORS.filter(
+        (m) => m.toLowerCase().includes(minorInput.toLowerCase()) && !minors.includes(m)
+      )
+    : COMMON_MINORS.filter((m) => !minors.includes(m));
 
   const handleSubmit = () => {
     if (!canSubmit) return;
 
     createProfile({
       name: name.trim(),
-      major: major.trim(),
+      majors: majors.filter((m) => m.trim().length > 0).map((m) => m.trim()),
       interests: interests.trim(),
       catalogYear: '2024-2025',
       completedCourses: [],
-      selectedMinors: [],
+      selectedMinors: minors,
       planSemester: 'Summer 2026',
     });
     void navigate('/courses');
+  };
+
+  const updateMajor = (index: number, value: string) => {
+    const updated = [...majors];
+    updated[index] = value;
+    setMajors(updated);
+  };
+
+  const addMajor = () => {
+    if (majors.length < 3) {
+      setMajors([...majors, '']);
+    }
+  };
+
+  const removeMajor = (index: number) => {
+    if (majors.length > 1) {
+      setMajors(majors.filter((_, i) => i !== index));
+    }
+  };
+
+  const addMinor = (minor: string) => {
+    if (minor.trim() && !minors.includes(minor.trim())) {
+      setMinors([...minors, minor.trim()]);
+    }
+    setMinorInput('');
+    setShowMinorSuggestions(false);
+  };
+
+  const removeMinor = (minor: string) => {
+    setMinors(minors.filter((m) => m !== minor));
   };
 
   return (
@@ -82,33 +141,113 @@ export default function OnboardingPage() {
             />
           </div>
 
-          {/* Major */}
+          {/* Majors */}
+          <div>
+            <div className="mb-2 flex items-center justify-between">
+              <label className="text-sm font-medium text-ua-cool-gray">
+                Major(s) <span className="text-ua-red">*</span>
+              </label>
+              {majors.length < 3 && (
+                <button
+                  onClick={addMajor}
+                  className="flex items-center gap-1 text-xs text-ua-oasis hover:text-ua-sky"
+                >
+                  <PlusIcon className="h-3.5 w-3.5" />
+                  Add Major
+                </button>
+              )}
+            </div>
+            <div className="space-y-3">
+              {majors.map((major, index) => (
+                <div key={index} className="relative">
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={major}
+                      onChange={(e) => {
+                        updateMajor(index, e.target.value);
+                        setShowSuggestions(index);
+                      }}
+                      onFocus={() => setShowSuggestions(index)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(null), 200)}
+                      placeholder={index === 0 ? 'e.g. BS Information Science' : 'Second major'}
+                      className="w-full rounded-lg border border-ua-blue-lighter bg-ua-blue px-4 py-3 text-white placeholder:text-gray-500 focus:border-ua-oasis focus:outline-none"
+                    />
+                    {majors.length > 1 && (
+                      <button
+                        onClick={() => removeMajor(index)}
+                        className="rounded-lg px-2 text-gray-500 transition-colors hover:text-ua-red"
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  {showSuggestions === index && filteredMajors(major).length > 0 && (
+                    <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-ua-blue-lighter bg-ua-blue-light shadow-xl">
+                      {filteredMajors(major).map((m) => (
+                        <button
+                          key={m}
+                          onMouseDown={() => {
+                            updateMajor(index, m);
+                            setShowSuggestions(null);
+                          }}
+                          className="block w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-ua-blue-lighter hover:text-white"
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Minors */}
           <div>
             <label className="mb-2 block text-sm font-medium text-ua-cool-gray">
-              Major <span className="text-ua-red">*</span>
+              Minor(s)
             </label>
+            {minors.length > 0 && (
+              <div className="mb-2 flex flex-wrap gap-2">
+                {minors.map((minor) => (
+                  <span
+                    key={minor}
+                    className="flex items-center gap-1.5 rounded-full bg-ua-oasis/15 px-3 py-1 text-xs font-medium text-ua-oasis"
+                  >
+                    {minor}
+                    <button onClick={() => removeMinor(minor)} className="hover:text-white">
+                      <XIcon className="h-3 w-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
             <div className="relative">
               <input
                 type="text"
-                value={major}
+                value={minorInput}
                 onChange={(e) => {
-                  setMajor(e.target.value);
-                  setShowSuggestions(true);
+                  setMinorInput(e.target.value);
+                  setShowMinorSuggestions(true);
                 }}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                placeholder="e.g. BS Information Science"
+                onFocus={() => setShowMinorSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowMinorSuggestions(false), 200)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && minorInput.trim()) {
+                    e.preventDefault();
+                    addMinor(minorInput);
+                  }
+                }}
+                placeholder="Type a minor or select from suggestions"
                 className="w-full rounded-lg border border-ua-blue-lighter bg-ua-blue px-4 py-3 text-white placeholder:text-gray-500 focus:border-ua-oasis focus:outline-none"
               />
-              {showSuggestions && filteredMajors.length > 0 && (
+              {showMinorSuggestions && filteredMinors.length > 0 && (
                 <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-ua-blue-lighter bg-ua-blue-light shadow-xl">
-                  {filteredMajors.map((m) => (
+                  {filteredMinors.map((m) => (
                     <button
                       key={m}
-                      onMouseDown={() => {
-                        setMajor(m);
-                        setShowSuggestions(false);
-                      }}
+                      onMouseDown={() => addMinor(m)}
                       className="block w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-ua-blue-lighter hover:text-white"
                     >
                       {m}
