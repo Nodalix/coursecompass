@@ -10,9 +10,10 @@ export default function ProgressRing({ percent, size = 120, strokeWidth = 8, lab
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
   const color = percent >= 100 ? '#378DBD' : percent >= 50 ? '#FBBF24' : '#AB0520';
+  const isSmall = size <= 80;
 
   return (
-    <div className="flex flex-col items-center gap-2">
+    <div className="relative flex flex-col items-center gap-2">
       <svg width={size} height={size} className="-rotate-90">
         <circle
           cx={size / 2}
@@ -35,9 +36,9 @@ export default function ProgressRing({ percent, size = 120, strokeWidth = 8, lab
           className="transition-all duration-500"
         />
       </svg>
-      <div className="absolute flex flex-col items-center justify-center" style={{ width: size, height: size }}>
-        <span className="text-2xl font-bold text-white">{percent}%</span>
-        {label && <span className="text-xs text-gray-400">{label}</span>}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className={`font-bold text-white ${isSmall ? 'text-base' : 'text-2xl'}`}>{percent}%</span>
+        {label && <span className={`text-gray-400 ${isSmall ? 'text-[10px]' : 'text-xs'}`}>{label}</span>}
       </div>
     </div>
   );
