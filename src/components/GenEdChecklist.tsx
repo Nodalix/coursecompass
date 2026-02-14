@@ -10,15 +10,15 @@ interface CheckItemProps {
 
 function CheckItem({ label, sublabel, checked, onChange }: CheckItemProps) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-navy-lighter bg-navy-light/50 p-3 transition-colors hover:border-navy-lighter/80">
+    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-ua-blue-lighter bg-ua-blue-light/50 p-3 transition-colors hover:border-ua-blue-lighter/80">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="h-4 w-4 rounded border-gray-500 accent-teal"
+        className="h-4 w-4 rounded border-gray-500 accent-ua-oasis"
       />
       <div>
-        <span className={`text-sm ${checked ? 'text-teal line-through' : 'text-gray-200'}`}>
+        <span className={`text-sm ${checked ? 'text-ua-oasis line-through' : 'text-gray-200'}`}>
           {label}
         </span>
         {sublabel && <p className="text-xs text-gray-500">{sublabel}</p>}

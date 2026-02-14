@@ -25,16 +25,16 @@ export default function CourseCard({ course, isCompleted, onToggle }: CourseCard
     <div
       className={`flex items-start gap-3 rounded-lg border p-3 transition-colors ${
         isCompleted
-          ? 'border-teal/30 bg-teal/5'
-          : 'border-navy-lighter bg-navy-light hover:border-navy-lighter/80'
+          ? 'border-ua-oasis/30 bg-ua-oasis/5'
+          : 'border-ua-blue-lighter bg-ua-blue-light hover:border-ua-blue-lighter/80'
       }`}
     >
       <button
         onClick={() => onToggle(course)}
         className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors ${
           isCompleted
-            ? 'border-teal bg-teal text-navy'
-            : 'border-gray-500 hover:border-teal'
+            ? 'border-ua-oasis bg-ua-oasis text-white'
+            : 'border-gray-500 hover:border-ua-oasis'
         }`}
       >
         {isCompleted && (
@@ -45,7 +45,7 @@ export default function CourseCard({ course, isCompleted, onToggle }: CourseCard
       </button>
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline gap-2">
-          <span className="font-mono text-sm font-semibold text-teal">{course.c}</span>
+          <span className="font-mono text-sm font-semibold text-ua-oasis">{course.c}</span>
           <span className="text-xs text-gray-400">{course.u}u</span>
         </div>
         <p className="text-sm text-gray-200">{course.n}</p>
@@ -54,7 +54,7 @@ export default function CourseCard({ course, isCompleted, onToggle }: CourseCard
           {course.g.map((g) => (
             <span
               key={g}
-              className="rounded-full bg-navy px-2 py-0.5 text-[10px] font-medium text-teal"
+              className="rounded-full bg-ua-blue px-2 py-0.5 text-[10px] font-medium text-ua-oasis"
             >
               {DOMAIN_LABELS[g] ?? g}
             </span>

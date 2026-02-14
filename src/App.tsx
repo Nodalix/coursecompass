@@ -3,6 +3,7 @@ import { ProfileProvider, useProfile } from './context/ProfileContext';
 import Layout from './components/Layout';
 import DashboardPage from './pages/DashboardPage';
 import GenEdPage from './pages/GenEdPage';
+import ChatPage from './pages/ChatPage';
 import OnboardingPage from './pages/OnboardingPage';
 
 function AppRoutes() {
@@ -18,6 +19,7 @@ function AppRoutes() {
           }
         />
         <Route path="/gen-ed" element={<GenEdPage />} />
+        <Route path="/chat" element={<ChatPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
       </Route>
     </Routes>

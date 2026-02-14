@@ -1,20 +1,34 @@
 @import "tailwindcss";
 
 @theme {
-  --color-navy: #0a1628;
-  --color-navy-light: #1a2744;
-  --color-navy-lighter: #243352;
-  --color-teal: #00E4B8;
-  --color-teal-dim: #00b894;
-  --color-ua-red: #CC0033;
+  /* Official University of Arizona Brand Colors */
+  --color-ua-red: #AB0520;
+  --color-ua-red-dim: #8B0015;
+  --color-ua-blue: #0C234B;
+  --color-ua-blue-light: #1E3A5F;
+  --color-ua-blue-lighter: #2B4A72;
+  --color-ua-oasis: #378DBD;
+  --color-ua-oasis-dim: #2a7199;
+  --color-ua-sky: #81D3EB;
+  --color-ua-bloom: #EF4056;
+  --color-ua-midnight: #001C48;
+  --color-ua-cool-gray: #E2E9EB;
+  --color-ua-warm-gray: #F4EDE5;
+
+  /* Semantic aliases */
+  --color-navy: #0C234B;
+  --color-navy-light: #1E3A5F;
+  --color-navy-lighter: #2B4A72;
+  --color-teal: #378DBD;
+  --color-teal-dim: #2a7199;
   --color-gold: #FBBF24;
   --color-gold-dim: #d4a017;
 }
 
 @layer base {
   body {
-    @apply bg-navy text-gray-100 antialiased;
-    font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+    @apply bg-ua-blue text-gray-100 antialiased;
+    font-family: system-ui, -apple-system, sans-serif;
     margin: 0;
     min-height: 100vh;
   }

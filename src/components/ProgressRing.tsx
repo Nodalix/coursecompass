@@ -9,7 +9,7 @@ export default function ProgressRing({ percent, size = 120, strokeWidth = 8, lab
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (percent / 100) * circumference;
-  const color = percent >= 100 ? '#00E4B8' : percent >= 50 ? '#FBBF24' : '#CC0033';
+  const color = percent >= 100 ? '#378DBD' : percent >= 50 ? '#FBBF24' : '#AB0520';
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -19,7 +19,7 @@ export default function ProgressRing({ percent, size = 120, strokeWidth = 8, lab
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#1a2744"
+          stroke="#1E3A5F"
           strokeWidth={strokeWidth}
         />
         <circle

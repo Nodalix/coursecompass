@@ -25,11 +25,11 @@ export default function GenEdPage() {
             Track your progress toward UA's universal gen ed requirements
           </p>
           <div className="mt-2 flex gap-3 text-xs">
-            <span className="text-teal">
+            <span className="text-ua-oasis">
               {progress.epDomainsComplete}/4 EP Domains
             </span>
             <span className="text-gray-500">|</span>
-            <span className="text-teal">
+            <span className="text-ua-oasis">
               {progress.bcUnitsComplete}/{progress.bcUnitsTotal}u Building Connections
             </span>
           </div>

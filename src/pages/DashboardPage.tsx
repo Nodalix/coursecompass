@@ -46,22 +46,22 @@ export default function DashboardPage() {
         <StatCard
           label="Courses Logged"
           value={currentProfile.completedCourses.length.toString()}
-          color="text-teal"
+          color="text-ua-oasis"
         />
         <StatCard
           label="Foundations"
           value={`${progress.foundationsComplete}/${progress.foundationsTotal}`}
-          color={progress.foundationsComplete === progress.foundationsTotal ? 'text-teal' : 'text-gold'}
+          color={progress.foundationsComplete === progress.foundationsTotal ? 'text-ua-oasis' : 'text-gold'}
         />
         <StatCard
           label="Language"
           value={`${progress.languageComplete}/${progress.languageTotal}`}
-          color={progress.languageComplete === progress.languageTotal ? 'text-teal' : 'text-gold'}
+          color={progress.languageComplete === progress.languageTotal ? 'text-ua-oasis' : 'text-gold'}
         />
         <StatCard
           label="UNIV"
           value={`${progress.univComplete}/${progress.univTotal}`}
-          color={progress.univComplete === progress.univTotal ? 'text-teal' : 'text-gold'}
+          color={progress.univComplete === progress.univTotal ? 'text-ua-oasis' : 'text-gold'}
         />
       </div>
 
@@ -69,7 +69,7 @@ export default function DashboardPage() {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-white">Exploring Perspectives</h2>
-          <Link to="/gen-ed" className="text-xs text-teal hover:underline">
+          <Link to="/gen-ed" className="text-xs text-ua-oasis hover:underline">
             View All →
           </Link>
         </div>
@@ -83,13 +83,13 @@ export default function DashboardPage() {
                 to="/gen-ed"
                 className={`rounded-xl border p-4 text-center transition-colors ${
                   satisfied
-                    ? 'border-teal/30 bg-teal/5'
-                    : 'border-navy-lighter bg-navy-light hover:border-navy-lighter/80'
+                    ? 'border-ua-oasis/30 bg-ua-oasis/5'
+                    : 'border-ua-blue-lighter bg-ua-blue-light hover:border-ua-blue-lighter/80'
                 }`}
               >
                 <div className="text-2xl">{DOMAIN_ICONS[domain.key]}</div>
                 <p className="mt-2 text-xs font-medium text-gray-300">{domain.label}</p>
-                <p className={`mt-1 text-sm font-bold ${satisfied ? 'text-teal' : 'text-gray-500'}`}>
+                <p className={`mt-1 text-sm font-bold ${satisfied ? 'text-ua-oasis' : 'text-gray-500'}`}>
                   {satisfied ? 'Done' : `${units}/${domain.minUnits}u`}
                 </p>
               </Link>
@@ -102,11 +102,11 @@ export default function DashboardPage() {
       <div>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-semibold text-white">Building Connections</h2>
-          <Link to="/gen-ed" className="text-xs text-teal hover:underline">
+          <Link to="/gen-ed" className="text-xs text-ua-oasis hover:underline">
             View All →
           </Link>
         </div>
-        <div className="rounded-xl border border-navy-lighter bg-navy-light p-4">
+        <div className="rounded-xl border border-ua-blue-lighter bg-ua-blue-light p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className="text-2xl">🔗</span>
@@ -118,8 +118,8 @@ export default function DashboardPage() {
             <span
               className={`rounded-full px-3 py-1 text-xs font-medium ${
                 progress.bcUnitsComplete >= 9
-                  ? 'bg-teal/15 text-teal'
-                  : 'bg-navy px-3 py-1 text-gray-400'
+                  ? 'bg-ua-oasis/15 text-ua-oasis'
+                  : 'bg-ua-blue px-3 py-1 text-gray-400'
               }`}
             >
               {progress.bcUnitsComplete}/{progress.bcUnitsTotal}u
@@ -133,7 +133,7 @@ export default function DashboardPage() {
 
 function StatCard({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div className="rounded-xl border border-navy-lighter bg-navy-light p-4 text-center">
+    <div className="rounded-xl border border-ua-blue-lighter bg-ua-blue-light p-4 text-center">
       <p className={`text-xl font-bold ${color}`}>{value}</p>
       <p className="mt-1 text-xs text-gray-500">{label}</p>
     </div>

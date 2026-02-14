@@ -13,8 +13,8 @@ export default function ProfileSelector() {
           onClick={() => switchProfile(p.id)}
           className={`rounded-full px-3 py-1 text-sm font-medium transition-colors ${
             currentProfile?.id === p.id
-              ? 'bg-teal text-navy'
-              : 'bg-navy-lighter text-gray-300 hover:bg-navy-light'
+              ? 'bg-ua-oasis text-white'
+              : 'bg-ua-blue-lighter text-gray-300 hover:bg-ua-blue-light'
           }`}
         >
           {p.name}
@@ -22,7 +22,7 @@ export default function ProfileSelector() {
       ))}
       <button
         onClick={() => navigate('/onboarding')}
-        className="flex h-7 w-7 items-center justify-center rounded-full bg-navy-lighter text-gray-400 transition-colors hover:bg-teal hover:text-navy"
+        className="flex h-7 w-7 items-center justify-center rounded-full bg-ua-blue-lighter text-gray-400 transition-colors hover:bg-ua-red hover:text-white"
         title="Add Student"
       >
         +

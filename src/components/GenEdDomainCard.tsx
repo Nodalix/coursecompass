@@ -36,10 +36,10 @@ export default function GenEdDomainCard({ domain }: GenEdDomainCardProps) {
   };
 
   return (
-    <div className="rounded-xl border border-navy-lighter bg-navy-light/50 overflow-hidden">
+    <div className="rounded-xl border border-ua-blue-lighter bg-ua-blue-light/50 overflow-hidden">
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-navy-light"
+        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-ua-blue-light"
       >
         <div className="flex items-center gap-3">
           <span className="text-2xl">{DOMAIN_ICONS[domain.key]}</span>
@@ -54,8 +54,8 @@ export default function GenEdDomainCard({ domain }: GenEdDomainCardProps) {
           <span
             className={`rounded-full px-3 py-1 text-xs font-medium ${
               satisfied
-                ? 'bg-teal/15 text-teal'
-                : 'bg-ua-red/15 text-ua-red'
+                ? 'bg-ua-oasis/15 text-ua-oasis'
+                : 'bg-ua-red/15 text-ua-bloom'
             }`}
           >
             {satisfied ? 'Complete' : `${unitsCompleted}/${domain.minUnits}u`}
@@ -70,7 +70,7 @@ export default function GenEdDomainCard({ domain }: GenEdDomainCardProps) {
         </div>
       </button>
       {expanded && (
-        <div className="border-t border-navy-lighter p-4">
+        <div className="border-t border-ua-blue-lighter p-4">
           <div className="grid gap-2 sm:grid-cols-2">
             {courses.map((course) => (
               <CourseCard
